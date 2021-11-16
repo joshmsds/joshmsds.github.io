@@ -30,9 +30,7 @@ server <- function(input, output){
   output$ibuBPlot <- renderPlot({
         x <- ibuOmit$IBU
         bins <- seq(min(x), max(x), length.out = input$bins+1)
-        boxplot(x, col= "#75AADB", border = "white",
-                xlab = "IBU Values",
-                main = "Boxplot of IBU values")
+        boxplot(x, xlab = "IBU Values", main = "Boxplot of IBU values")
       })
 
   output$abvHPlot <- renderPlot({
@@ -46,9 +44,7 @@ server <- function(input, output){
     output$abvBPlot <- renderPlot({
         x <- abvOmit$ABV
         bins <- seq(min(x), max(x), length.out = input$bins+1)
-        boxplot(x, col= "#75AADB", border = "white",
-                xlab = "ABV Values",
-                main = "Boxplot of ABV values")
+        boxplot(x, xlab = "ABV Values", main = "Boxplot of ABV values")
       })
 
 }

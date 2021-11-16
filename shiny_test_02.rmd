@@ -25,6 +25,4 @@ Allow the user to filter the data on the scatter plot by state.
 
 Add at least one additional plot from your analysis and make sure to clearly label and/or describe the information it is conveying.  
 
-
-
 <a href=" https://joshmsds.shinyapps.io/shinyBeer/"> Beer+Breweries Shiny App</a>

@@ -5,9 +5,9 @@ account: joshmsds
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 5138822
-bundleId: 5260032
+bundleId: 5260098
 url: https://joshmsds.shinyapps.io/shinyBeer/
-when: 1637103817.51907
-lastSyncTime: 1637103817.51907
+when: 1637105405.41483
+lastSyncTime: 1637105405.41483
 asMultiple: FALSE
 asStatic: FALSE
