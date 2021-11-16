@@ -245,7 +245,7 @@ $(document).ready(function () {
   <a href="index.html">Home</a>
 </li>
 <li>
-  <a href="case_study_01_final.rmd">Case Study 01</a>
+  <a href="case_study_01_final.html">Case Study 01</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
@@ -285,7 +285,7 @@ $(document).ready(function () {
 </ul>
 <div id="determine-the-number-of-breweries-present-in-each-state" class="section level3">
 <h3>1. Determine the number of breweries present in each state</h3>
-<p><img src="case_study_01_final_files/figure-html/unnamed-chunk-2-1.png" width="672" /><img src="case_study_01_final_files/figure-html/unnamed-chunk-2-2.png" width="672" /><img src="case_study_01_final_files/figure-html/unnamed-chunk-2-3.png" width="672" /></p>
+<p><img src="case_study_01_final_files/figure-html/unnamed-chunk-1-1.png" width="672" /><img src="case_study_01_final_files/figure-html/unnamed-chunk-1-2.png" width="672" /><img src="case_study_01_final_files/figure-html/unnamed-chunk-1-3.png" width="672" /></p>
 </div>
 <div id="merge-beer-data-with-the-breweries-data" class="section level3">
 <h3>2. Merge beer data with the breweries data</h3>
@@ -326,7 +326,7 @@ $(document).ready(function () {
 </div>
 <div id="compute-the-median-alcohol-content-and-international-bitterness-unit-for-each-state" class="section level3">
 <h3>4. Compute the median alcohol content and international bitterness unit for each state</h3>
-<p>This is farily straight forward. However, we need to be sure to replace all <code>0</code> values with <code>NA</code> and drop them prior to graphing. Also, we will scale the <code>y</code> axis and rotate the labels on the <code>x</code> axis so that things are a little more readable. <img src="case_study_01_final_files/figure-html/unnamed-chunk-4-1.png" width="672" /><img src="case_study_01_final_files/figure-html/unnamed-chunk-4-2.png" width="672" /></p>
+<p>This is farily straight forward. However, we need to be sure to replace all <code>0</code> values with <code>NA</code> and drop them prior to graphing. Also, we will scale the <code>y</code> axis and rotate the labels on the <code>x</code> axis so that things are a little more readable. <img src="case_study_01_final_files/figure-html/unnamed-chunk-3-1.png" width="672" /><img src="case_study_01_final_files/figure-html/unnamed-chunk-3-2.png" width="672" /></p>
 </div>
 <div id="identify-the-state-with-the-maximum-abv-and-the-state-with-the-maximum-ibu" class="section level3">
 <h3>5. Identify the state with the maximum ABV and the state with the maximum IBU</h3>
@@ -342,23 +342,23 @@ $(document).ready(function () {
 ##                     Mean   :0.05977  
 ##                     3rd Qu.:0.06700  
 ##                     Max.   :0.12800</code></pre>
-<p><img src="case_study_01_final_files/figure-html/unnamed-chunk-5-1.png" width="672" /><img src="case_study_01_final_files/figure-html/unnamed-chunk-5-2.png" width="672" /><img src="case_study_01_final_files/figure-html/unnamed-chunk-5-3.png" width="672" /></p>
+<p><img src="case_study_01_final_files/figure-html/unnamed-chunk-4-1.png" width="672" /><img src="case_study_01_final_files/figure-html/unnamed-chunk-4-2.png" width="672" /><img src="case_study_01_final_files/figure-html/unnamed-chunk-4-3.png" width="672" /></p>
 <pre><code>## integer(0)</code></pre>
-<p><img src="case_study_01_final_files/figure-html/unnamed-chunk-5-4.png" width="672" /></p>
+<p><img src="case_study_01_final_files/figure-html/unnamed-chunk-4-4.png" width="672" /></p>
 </div>
 <div id="identify-any-relationship-between-the-bitterness-of-the-beer-and-its-alcoholic-content" class="section level3">
 <h3>7. Identify any relationship between the bitterness of the beer and its alcoholic content</h3>
 <p>Relationships between the data can be seen with the linear regression line fit to the data. The positive slope of the line is indicative of a positive relationship between ABV and IBU variables. The grey area around the line is the standard error. Additionally, the correlation matrix shows the same relationship with the dark blue value.</p>
-<p><img src="case_study_01_final_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p><img src="case_study_01_final_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
 <pre><code>##           ABV       IBU
 ## ABV 1.0000000 0.6706215
 ## IBU 0.6706215 1.0000000</code></pre>
-<p><img src="case_study_01_final_files/figure-html/unnamed-chunk-6-2.png" width="672" /></p>
+<p><img src="case_study_01_final_files/figure-html/unnamed-chunk-5-2.png" width="672" /></p>
 </div>
 <div id="investigate-the-difference-with-respect-to-ibu-and-abv-between-ipas-and-other-types-of-ale" class="section level3">
 <h3>8. Investigate the difference with respect to IBU and ABV between IPAs and other types of Ale</h3>
 <p>For KNN classification we used a 80/20 split. We dynamically find the best value for k by executing the model 100 times and record the accuracy for each run. The optimal k value is the one we have identified to have the maximum accuracy value. This k value is then used to generate the confusion matrix and statistics report. Additionally, we draw the population boundaries to visualize the error in the model. Given this data, Ale can be identified from the lower ABV and IBU values when compared with IPA beer.</p>
-<p><img src="case_study_01_final_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p><img src="case_study_01_final_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##       
@@ -386,12 +386,12 @@ $(document).ready(function () {
 ##                                           
 ##        &#39;Positive&#39; Class : Ale             
 ## </code></pre>
-<p><img src="case_study_01_final_files/figure-html/unnamed-chunk-7-2.png" width="672" /></p>
+<p><img src="case_study_01_final_files/figure-html/unnamed-chunk-6-2.png" width="672" /></p>
 </div>
 <div id="find-one-other-useful-inference-from-the-data-that-you-feel-budweiser-may-be-able-to-find-value-in" class="section level3">
 <h3>9. Find one other useful inference from the data that you feel Budweiser may be able to find value in</h3>
 <p>Performing simple text mining we were able to identify several beer types. Using these types we matched the manufacturing base for each type of beer to the State in which it is manufactured. Additionally, we correlate the ABV values to each State and serving size. This data enables us to identify underrepresented manufacturing bases and market opportunities as well as preferred serving sizes.</p>
-<p><img src="case_study_01_final_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p><img src="case_study_01_final_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
 <pre><code>## # A tibble: 8 x 2
 ##   `factor(Type)` no_rows
 ##   &lt;fct&gt;            &lt;int&gt;
@@ -403,7 +403,7 @@ $(document).ready(function () {
 ## 6 PILS                27
 ## 7 PORT                74
 ## 8 STOUT              100</code></pre>
-<p><img src="case_study_01_final_files/figure-html/unnamed-chunk-8-2.png" width="672" /><img src="case_study_01_final_files/figure-html/unnamed-chunk-8-3.png" width="672" /><img src="case_study_01_final_files/figure-html/unnamed-chunk-8-4.png" width="672" /><img src="case_study_01_final_files/figure-html/unnamed-chunk-8-5.png" width="672" /><img src="case_study_01_final_files/figure-html/unnamed-chunk-8-6.png" width="672" /><img src="case_study_01_final_files/figure-html/unnamed-chunk-8-7.png" width="672" /><img src="case_study_01_final_files/figure-html/unnamed-chunk-8-8.png" width="672" /><img src="case_study_01_final_files/figure-html/unnamed-chunk-8-9.png" width="672" /></p>
+<p><img src="case_study_01_final_files/figure-html/unnamed-chunk-7-2.png" width="672" /><img src="case_study_01_final_files/figure-html/unnamed-chunk-7-3.png" width="672" /><img src="case_study_01_final_files/figure-html/unnamed-chunk-7-4.png" width="672" /><img src="case_study_01_final_files/figure-html/unnamed-chunk-7-5.png" width="672" /><img src="case_study_01_final_files/figure-html/unnamed-chunk-7-6.png" width="672" /><img src="case_study_01_final_files/figure-html/unnamed-chunk-7-7.png" width="672" /><img src="case_study_01_final_files/figure-html/unnamed-chunk-7-8.png" width="672" /><img src="case_study_01_final_files/figure-html/unnamed-chunk-7-9.png" width="672" /></p>
 </div>
 </div>
 </div>
