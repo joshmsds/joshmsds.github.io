@@ -1,0 +1,13 @@
+name: HelloShiny
+title: HelloShiny
+username:
+account: joshmsds
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5138262
+bundleId: 5258673
+url: https://joshmsds.shinyapps.io/HelloShiny/
+when: 1637080814.27599
+lastSyncTime: 1637080814.27599
+asMultiple: FALSE
+asStatic: FALSE

@@ -2,25 +2,13 @@
 title: "About"
 output: html_document
 ---
-# About Me
+### TL;DR
 
-Your name
+* Name: Josh
 
+* Interests: Coding, fishing, and RF stuff 
 
-A picture 
+* School: SMU 
 
-
-Where you are from
-
-
-Your Interests
-
-
-Where You Work
-
-
-Where you went to school
-
-
-The [Projects]#(Projects) drop down represents work / analyses that I have completed.  Please check it out!
+Check out the various drop down menus to see work / analysis that I have completed.
 

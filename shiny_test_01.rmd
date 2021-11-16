@@ -1,5 +1,5 @@
 ---
-title: "Shiny Test"
+title: "Shiny Test 01"
 output: html_document
 ---
 # Shiny Test App
@@ -7,4 +7,4 @@ output: html_document
 Test if it works...
 
 
-<a href="https://ddsshiny.shinyapps.io/WordUP/">Old Faithful Histogram App</a>
+<a href=" https://joshmsds.shinyapps.io/HelloShiny/">Old Faithful Histogram App</a>

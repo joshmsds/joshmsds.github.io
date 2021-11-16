@@ -6,14 +6,16 @@ navbar:
     href: index.html
   - text: "About"
     href: about.html
-  - text: "Projects"
+  - text: "Static Projects"
     menu: 
     - text: "Case Study 01"
       href: case_study_01_final.html
-  - text: "External"
+  - text: "Shiny Projects"
     menu:
-    - text: "Shiny Tesy 01"
+    - text: "Shiny Test 01"
       href: shiny_test_01.html
+    - text: "Shiny Test 02"
+      href: shiny_test_02.html
 output: 
   html_document:
     theme: yeti
