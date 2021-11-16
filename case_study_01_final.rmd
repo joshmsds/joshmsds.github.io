@@ -1,0 +1,518 @@
+---
+title: "Week 8 Case Study 01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Introduction
+For this case study, we investigated two datasets; a Beers dataset contained information for 2,410 craft beers while the Breweries dataset contained information for 558 breweries.
+
+Through the analysis, we found that there were several states with few breweries present where the creation of a new facility could potentially create more income. In addition, we analyzed the correlation between IBU and ABV and found that as IBU increased, so too did ABV, inferring that as bitterness increases so too does alcohol content.
+
+We also investigated the median IBU and ABV per state, which was remarkably close to the mean, indicating that the distribution was symmetrical. We explored the trends of IBU and ABV between IPAs and Ales and found that we could discern the two types of beers with an accuracy of 88% based on IBU and ABV units when using KNN as the classifier, where k=5 produced the highest accuracy. However, since Budweiser trends towards lager-style beers, we thought it would be best to focus our analysis on where Budweiser could build a facility, or purchase an existing facility, in a region that preferred lower IBU and ABV beers.
+
+In order to find the best possible target state, we investigated the types of beers that are most popular per state. We found that cider was underrepresented in most states, with exceptions for Michigan and Oregon. Next, we looked at lager and pilsner-type beers per state and found that there were no facilities for these types of beers in several Southeastern states. We also looked at the correlation between ABV and serving size and found that there was a preference for 4-8 oz servings with alcohol content between 4-7% in the Southeastern US.
+
+## Exploratory Data Analysis 
+In this section we will perform an exploratory data analysis (EDA) of the `Beers` and `Breweries` datasets. These datasets can be found in the `datasets` directory for the project. The project will attempt to investigate the data by performing the following steps:
+
+ - Determine the number of breweries present in each state.
+
+ - Merge beer data with the breweries data. Print the first 6 observations and the 
+last six observations to check the merged file. 
+
+ - Address the missing values in each column.
+
+ - Compute the median alcohol content and international bitterness unit for each 
+state. Plot a bar chart to compare.
+
+ - Identify the state with the maximum alcoholic (ABV) beer. Identify which state has the most 
+bitter (IBU) beer. 
+
+ - Comment on the summary statistics and distribution of the ABV variable.
+
+ - Identify any relationship between the bitterness of the beer and its 
+alcoholic content. Draw a scatter plot.  Make your best judgment of a relationship 
+and EXPLAIN your answer.
+
+ - Investigate the difference with respect to IBU and ABV between IPAs (India Pale Ales) and other types of Ale (any beer with "Ale" in its name other than IPA).  Use KNN classificationto investigate this relationship.  Provide statistical evidence one way or the other. 
+
+### 1. Determine the number of breweries present in each state
+```{r message=FALSE, warning=FALSE}
+#required libraries
+library(plyr)
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(lava)
+library(caret)
+library(caTools)
+library(class)
+library(DataExplorer)
+library(e1071)
+library(fiftystater)
+library(ggthemes)
+library(glue)
+library(mapdata)
+library(mapproj)
+library(maps)
+library(tibble)
+library(tidyr)
+library(trimr)
+library(usdata)
+library(scales)
+library(corrplot)
+
+
+#get the data from the file
+breweriesDF <- read.csv('datasets\\Breweries.csv')
+
+#group the breweries data by state
+brewCountState <- breweriesDF %>% group_by(State) %>% count(State)
+
+#rename the column
+brewCountState <- brewCountState %>% rename(Count = n)
+
+#sort the dataframe
+sortBrewCountState <- brewCountState %>% arrange(desc(Count))
+
+#plot the sorted data with ggplot and adjust the labels so we can read them
+sortBrewCountState %>% ggplot(aes(x=reorder(State, -Count), y=Count, fill=State)) + geom_bar(stat='identity') + theme(axis.text.x = element_text(angle=90, vjust=.5, hjust=1)) + labs(title='Breweries per State - descending', x='States', y='Totals') + theme(legend.position='none')
+
+#graph the states again, this time alphabetic 
+breweriesDF %>% ggplot(aes(x=as.factor(State), fill=as.factor(State))) + geom_bar(width = 0.9, position = position_dodge()) + theme(axis.text.x = element_text(angle=90, vjust=.5, hjust=1)) + labs(title='Breweries per State - alphabetic', x='States', y='Totals') + theme(legend.position='none')
+
+#make new df 
+breweries <- breweriesDF
+
+#get the state data
+US_States <- map_data("state")
+
+#rename the column to state
+colnames(US_States)[colnames(US_States)=="region"] <- "State"
+
+#get number of breweries per state
+BrewCount <- aggregate(Brew_ID ~ State, breweries, length)
+
+#rename the column
+names(BrewCount) <- c("State", "Breweries")
+
+#trim off whitespace
+BrewCount$State <- lava::trim(BrewCount$State, recode.factor = TRUE) 
+
+#rename the state from abbreviation
+BrewCount$State <- tolower(abbr2state(BrewCount$State))
+
+#create the breweries map
+BrewMap <- left_join(US_States, BrewCount, by = "State")
+
+#graph it
+ggplot(data = BrewMap) +
+  geom_path(aes(x = long, y = lat, group = group), color = "blue") +
+  geom_polygon(aes(
+    x = long,
+    y = lat,
+    group = group,
+    fill = Breweries), color = "red") +
+  coord_map() +
+  scale_fill_gradient(low = "light blue" , high = "dark blue") + 
+  ggtitle("Breweries per State") +
+  theme_void() +
+    theme(plot.title = element_text(hjust = 0.5),
+          axis.title = element_blank(),
+          axis.ticks = element_blank(),
+          axis.text = element_blank())
+```
+
+### 2. Merge beer data with the breweries data 
+We will merge the data from the two files into a single dataset. This dataset will be used for further analysis. 
+
+```{r}
+#get the data for each dataset
+beerDF <- read.csv('datasets\\Beers.csv')
+breweriesDF <- read.csv('datasets\\Breweries.csv')
+
+#rename the brewery_id and name columns so we can merge later
+beerDF <- beerDF %>% rename(Brew_ID = 'Brewery_id', Beer_Name = 'Name')
+breweriesDF <- breweriesDF %>% rename(Brew_Name = 'Name')
+
+#merge the data on Brew_ID column name
+beerBrewDF<- merge(beerDF,breweriesDF,by=c("Brew_ID"))
+
+#print out the top 6 rows
+head(beerBrewDF, n=6)
+#print out the bottom 6 rows
+tail(beerBrewDF, n=6)
+```
+### 3. Address the missing values in each column
+To address the missing values in each column we decided to try and keep the data and not use `na.omit`. To keep the rows with `NA` values we will replace `NA` with `0`. This will allow us to retain approximately 40% of the dataset for various uses.   
+```{r beerBrewDF}
+##unused
+#Here we are checking to see how much data will be lost if we drop all rows with missing data
+#total <-  dim(beerBrewDF)[1]
+#omitBeerBrewDF <- na.omit(beerBrewDF)
+#omitBeerBrewDF
+#noNaVals <- dim(omitBeerBrewDF)[1]
+#1 - (noNaVals / total)
+
+#many things are missing...
+plot_missing(beerBrewDF, title='Misssing data points')
+
+#replace the NA values in the IBU and ABV columns with 0
+repBeerBrewDF <- beerBrewDF %>% mutate(IBU = replace_na(IBU, 0), ABV = replace_na(ABV, 0))
+
+#nothing is missing 
+plot_missing(repBeerBrewDF, title='Missing data points with 0 set for NA')
+
+##unused
+#get the dimensions
+#dim(repBeerBrewDF)
+#drop all na values and check we didn't lose anything
+#dim(na.omit(repBeerBrewDF))
+```
+
+### 4. Compute the median alcohol content and international bitterness unit for each state 
+This is farily straight forward. However, we need to be sure to replace all `0` values with `NA` and drop them prior to graphing. Also, we will scale the `y` axis and rotate the labels on the `x` axis so that things are a little more readable. 
+```{r message=FALSE, warning=FALSE}
+#library for scaling the y axis
+
+
+#get only the data we are interested in (state name and abv values)
+stateABV <- repBeerBrewDF %>% select(State, ABV)
+#replace abv values with na
+stateABV[stateABV==0] <- NA
+#drop the na values
+stateABV <- na.omit(stateABV)
+#calculate the mean for each state 
+stateABV <- with(stateABV, aggregate(list(ABV), by = list(State), FUN = function(x) { tmp.mean = mean(x, na.rm = TRUE) } ))
+#rename the columns so it is pretty 
+stateABV <- stateABV %>% rename(State=1, ABV=2)
+
+#graph the ABV data with the y axis scaled and the x axis labels rotated
+stateABV %>% ggplot(aes(x=as.factor(State), y=ABV, fill=as.factor(State))) + geom_bar(stat='identity') + theme(axis.text.x = element_text(angle=90, vjust=.5, hjust=1), legend.position='none') + labs(title='Mean ABV per State', x='States', y='ABV') + scale_y_continuous(limits=c(.04,.08),oob = rescale_none)
+
+#again, only get the data we are interested in (state name and ibu)
+stateIBU <- repBeerBrewDF %>% select(State, IBU)
+#replace the ibu 0 values with na
+stateIBU[stateIBU==0] <- NA
+#drop the na values
+stateIBU <- na.omit(stateIBU)
+#group by the state name and calculate the mean
+stateIBU <- with(stateIBU, aggregate(list(IBU), by = list(State), FUN = function(x) { stateIBU.mean = mean(x) } ))
+#rename the columns so it is pretty 
+stateIBU <- stateIBU %>% rename(State=1, IBU=2)
+
+#graph the data in the same way as previous
+stateIBU %>% ggplot(aes(x=as.factor(State), y=IBU, fill=as.factor(State))) + geom_bar(stat='identity') + theme(axis.text.x = element_text(angle=90, vjust=.5, hjust=1), legend.position='none') + labs(title='Mean IBU per State', x='States', y='IBU')  + scale_y_continuous(limits=c(20,70),oob = rescale_none)
+
+```
+
+### 5. Identify the state with the maximum ABV and the state with the maximum IBU 
+```{r repBeerBrewDF}
+#select the row with the max abv value
+maxABV <- repBeerBrewDF[which.max(repBeerBrewDF$ABV),]
+
+##unused
+#get the state name
+#maxABV$State
+#get the abv value
+#maxABV$ABV
+
+#select the row with the max ibu value
+maxIBU <- repBeerBrewDF[which.max(repBeerBrewDF$IBU),]
+
+##unused
+#get the state name
+#maxIBU$State
+#get the ibu value
+#maxIBU$IBU
+```
+The state with the maximum ABV value is `r maxABV$State` with a value of `r maxABV$ABV`. 
+The state with the maximum IBU value is `r maxIBU$State` with a value of `r maxIBU$IBU`. 
+
+### 6.   Comment on the summary statistics and distribution of the ABV variable
+To generate the summary statistics of the ABV variable we remove all rows with `0` and use the `Summary` function. This function lists the 5 number summary. To graphically inspect the data we generate a boxplot of the ABV variable. Additionally, we used a histogram graph to show the distribution of the ABV data. When the histogram is combined with a standard normal distribution we can see the slight right-skew in the data. 
+```{r}
+##unused
+#summary(repBeerBrewDF$ABV)
+#boxplot(repBeerBrewDF$ABV, data=repBeerBrewDF, varwidth = TRUE, horizontal = TRUE)
+
+#only get the data we are intereste in (state name and abv values)
+allABV <- repBeerBrewDF %>% select(State, ABV)
+#replace 0 with na
+allABV[allABV==0] <- NA
+#drop the na data
+abvOmit <- na.omit(allABV)
+
+##unused
+#dim(abvOmit)
+
+#show the summary stats
+summary(abvOmit)
+
+#generate a boxplot
+boxplot(abvOmit$ABV, data=abvOmit, varwidth = TRUE, horizontal = TRUE, xlab='ABV Boxplot') 
+
+##unused
+#var(abvOmit$ABV)
+#sd(abvOmit$ABV)
+#hist(abvOmit$ABV)
+
+#Only get abv values
+x <- abvOmit$ABV
+#generate a histogram with 10 buckets
+ABV<-x
+h <- hist(ABV, breaks=10, main='ABV Histogram')
+
+#generate the x boundaries
+xfit <- seq(min(x),max(x),length=40)
+#generate the normal curve
+yfit <- dnorm(xfit,mean=mean(x),sd=sd(x))
+#fit the data 
+yfit <- yfit*diff(h$mids[1:2])*length(x)
+#start making the plot of the line with the histogram
+plot(h, xlab="ABV", main="ABV Histogram with Normal Curve") + lines(xfit, yfit, col="blue", lwd=2)
+#create a density plot
+d <- density(x)
+#show the thing
+plot(d, main='Density plot of ABV')
+
+```
+
+### 7. Identify any relationship between the bitterness of the beer and its alcoholic content
+
+Relationships between the data can be seen with the linear regression line fit to the data. The positive slope of the line is indicative of a positive relationship between ABV and IBU variables. The grey area around the line is the standard error. Additionally, the correlation matrix shows the same relationship with the dark blue value. 
+
+```{r message=FALSE, warning=FALSE}
+#required for correlation matrix
+
+
+#get the data
+beerDF <- read.csv('datasets\\Beers.csv')
+breweriesDF <- read.csv('datasets\\Breweries.csv')
+
+#rename the brewery_id and name columns so we can merge later
+beerDF <- beerDF %>% rename(Brew_ID = 'Brewery_id', Beer_Name = 'Name')
+breweriesDF <- breweriesDF %>% rename(Brew_Name = 'Name')
+
+#merge the data on Brew_ID column name
+beerBrewDF<- merge(beerDF,breweriesDF,by=c("Brew_ID"))
+
+#omit all na values
+omitBeerBrewDF <- na.omit(beerBrewDF)
+
+#generate a scatterplot with linear regression model fit to it
+ggplot(omitBeerBrewDF,aes(ABV, IBU)) +  geom_point(color='red') +  geom_smooth(method = "lm", se = TRUE)
+
+#get the avb and ibu data 
+abvibuDF <- data.frame(ABV=as.numeric(omitBeerBrewDF$ABV), IBU=as.numeric(omitBeerBrewDF$IBU))
+#create a matrix of the data
+cormat <- round(cor(abvibuDF),2)
+#show the matrix table
+cor(abvibuDF)
+#plot as heat map data
+corrplot(cormat, cormattype = "upper", order = "hclust", tl.col = "black", tl.srt = 45, title='Correlation Matrix', mar=c(0,0,1,0)) 
+##unused
+#ggplot(data = cormat, aes(x=ABV, y=IBU, fill=value)) + geom_tile()
+#heatmap(mAbvIbu)
+```
+
+
+### 8.   Investigate the difference with respect to IBU and ABV between IPAs and other types of Ale
+For KNN classification we used a 80/20 split. We dynamically find the best value for k by executing the model 100 times and record the accuracy for each run. The optimal k value is the one we have identified to have the maximum accuracy value. This k value is then used to generate the confusion matrix and statistics report. Additionally, we draw the population boundaries to visualize the error in the model. Given this data, Ale can be identified from the lower ABV and IBU values when compared with IPA beer.
+
+
+```{r message=FALSE, warning=FALSE}
+
+#identify the items that are IPA
+IPA <- omitBeerBrewDF[grep("\\sIPA", omitBeerBrewDF$Style, ignore.case = T),]
+
+#identify the items that are ale
+Ale <- omitBeerBrewDF[grep("\\sAle", omitBeerBrewDF$Style, ignore.case = T),]
+
+#create a new df for ipa
+test_IPA <- IPA %>% select(IBU, ABV)
+
+#set the type for later
+test_IPA$type="IPA"
+
+#create a new df for ale
+test_Ale <- Ale %>% select(IBU, ABV)
+
+#set the type for later
+test_Ale$type="Ale"
+
+#join the two df
+test <- rbind(test_Ale, test_IPA)
+
+#set the seed so we can have repeatable tests
+set.seed(100)
+
+#using an 80/20 train test split
+splitPerc = .8
+
+#split the data 
+split = sample(1:dim(test)[1],round(splitPerc * dim(test)[1]))
+
+#create the training bucket
+training = test[split,]
+
+#create the test bucket
+testing = test[-split,]
+
+#create a data frame to hold the k value results
+acc <- data.frame(accuracy = numeric(100), k=numeric(100))
+for (i in 1:100) {
+  # train and classify the data 
+  classify = knn(training[,c(1,2)],
+                 testing[,c(1,2)],
+                 training$type,
+                 prob = TRUE,
+                 k=i)
+  #get the confusion matrix for the test  
+  conf = confusionMatrix(table(classify, testing$type))
+  
+  #save our accuracy 
+  acc$accuracy[i] <-  conf$overall[1]
+  
+  #save the k value 
+  acc$k[i] <- i
+  
+}
+
+#plot our k to see how it went
+plot(acc$k,acc$accuracy, type = "l", xlab = "k Value", ylab='Accuracy')
+
+#get the best value for k
+best <- acc[which.max(acc$accuracy),]
+
+#run knn again with the best value we found for k
+knnipa <- knn(training[, c(1:2)], testing[, c(1:2)], training$type,k = best$k, prob = TRUE)
+
+#generate the confusion matrix for the best k 
+ipamatrix = confusionMatrix(table(knnipa, testing$type))
+ipamatrix
+
+#create df with predicted data
+plot.df = data.frame(testing, predicted = knnipa)
+
+#set our x, y, and predicted data 
+plot.df1 = data.frame(x = plot.df$IBU, 
+                      y = plot.df$ABV, 
+                      predicted = plot.df$predicted)
+
+#function to get the point subset
+find_hull = function(df) df[chull(df$x, df$y), ]
+
+#get the bounds of each group
+boundary = ddply(plot.df1, .variables = "predicted", .fun = find_hull)
+
+#graph the knn boundaries for each class
+ggplot(plot.df, aes(IBU, ABV, color = predicted, fill = predicted)) + 
+  geom_point(size = 1) + 
+  geom_polygon(data = boundary, aes(x,y), alpha = 0.5)
+```
+
+### 9. Find one other useful inference from the data that you feel Budweiser may be able to find value in
+
+Performing simple text mining we were able to identify several beer types. Using these types we matched the manufacturing base for each type of beer to the State in which it is manufactured. Additionally, we correlate the ABV values to each State and serving size. This data enables us to identify underrepresented manufacturing bases and market opportunities as well as preferred serving sizes.  
+
+```{r message=FALSE, warning=FALSE}
+
+#get the data for each dataset
+beerDF <- read.csv('datasets\\Beers.csv')
+breweriesDF <- read.csv('datasets\\Breweries.csv')
+
+#rename the brewery_id and name columns so we can merge later
+beerDF <- beerDF %>% rename(Brew_ID = 'Brewery_id', Beer_Name = 'Name')
+breweriesDF <- breweriesDF %>% rename(Brew_Name = 'Name')
+
+#merge the data on Brew_ID column name
+beerBrewDF<- merge(beerDF,breweriesDF,by=c("Brew_ID"))
+
+#graph the abv by state and color the serving size
+beerBrewDF %>% ggplot(aes(State, ABV*100, color = Ounces)) + geom_count(show.legend = T) +
+  theme(axis.text = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  ylab("ABV") + ggtitle("Preferred Serving Volume by State")
+
+#simple classification
+IPA <- beerBrewDF[grep("\\sIPA", beerBrewDF$Style, ignore.case = T),]
+IPA$Type = "IPA"
+ALE <- beerBrewDF[grep("\\sale", beerBrewDF$Style, ignore.case = T),]
+ALE$Type = "ALE"
+LAGER <- beerBrewDF[grep("lager", beerBrewDF$Style, ignore.case = T),]
+LAGER$Type = 'LAGER'
+PORTER <- beerBrewDF[grep("Porter", beerBrewDF$Style, ignore.case = T),]
+PORTER$Type = 'PORT'
+HEFE <- beerBrewDF[grep("Hefew", beerBrewDF$Style, ignore.case = T),]
+HEFE$Type = 'HEF'
+CIDER <- beerBrewDF[grep("Cider", beerBrewDF$Style, ignore.case = T),]
+CIDER$Type = 'CIDER'
+STOUT <- beerBrewDF[grep("stout", beerBrewDF$Style, ignore.case = T),]
+STOUT$Type = 'STOUT'
+PILS <- beerBrewDF[grep("Pilsner", beerBrewDF$Style, ignore.case = T),]
+PILS$Type = 'PILS'
+simpleStyleDF <- rbind(ALE, IPA, LAGER, PORTER, HEFE, CIDER, STOUT, PILS)
+simpleStyleDF %>% 
+  group_by(factor(Type)) %>%
+  summarise(no_rows = length(Type))
+
+
+#get the state data
+US_States <- map_data("state")
+
+#rename the column to state
+colnames(US_States)[colnames(US_States)=="region"] <- "State"
+
+#split the dataframe into a list of dataframes separated by type
+t <- split(simpleStyleDF, simpleStyleDF$Type)
+
+for (df in t){
+  #count number of items
+  BrewCount <- aggregate(Brew_ID ~ State, df, length)
+
+  #rename the column
+  names(BrewCount) <- c("State", "beers")
+
+  #trim off whitespace
+  BrewCount$State <- lava::trim(BrewCount$State, recode.factor = TRUE) 
+
+  #rename the state from abbreviation
+  BrewCount$State <- tolower(abbr2state(BrewCount$State))
+
+  #create the beer map for this type of beer
+  BrewMap <- left_join(US_States, BrewCount, by = "State")
+
+  #graph it
+  plt <- ggplot(data = BrewMap) +
+    geom_path(aes(x = long, y = lat, group = group), color = "blue") +
+    geom_polygon(aes(
+      x = long,
+      y = lat,
+      group = group,
+      fill = beers), color = "red") +
+    coord_map() +
+    scale_fill_gradient(low = "light blue" , high = "dark blue") + 
+    ggtitle(paste(df$Type, "Beers per State", sep=' ')) +
+    theme_void() +
+      theme(plot.title = element_text(hjust = 0.5),
+          axis.title = element_blank(),
+          axis.ticks = element_blank(),
+          axis.text = element_blank()) 
+  print(plt)
+}
+
+
+```
+
+# Conclusion 
+Through the analysis of the Beer and Brewery data, we found that there were several states with few brewing facilities where the creation of a Budweiser facility could increase revenue. While the current popularity of IPA style beers with high IBUs seems like an obvious market to expand into, we found that in the Southeastern US, demand for bitter, high alcohol, beers decreased and lager, pilsners, and hefeweizen beers were preferred.
+
+We have a few options for expansion; we found that there were very few ciders throughout the US and considering that Budweiser owns a brand of cider called “Johnny Appleseed” it could be beneficial to market this cider to more states from existing facilities to test market interest before committing to a new facility. Since Budweiser primarily brews lager-style beers, we chose to concentrate our efforts on states that have few facilities as well as a preference for beers with lower ABV and IBU units. To this end, we focused our research on Georgia, which has a port in Savannah which could ease transportation costs.
+
+Further analysis of Georgia showed that there is a preference for beers with an ABV between 4-7% and serving sizes between 4-8 ounces. The preference for smaller serving sizes will boost profits while reducing packaging costs. Furthermore, this would not require a major change to Budweiser manufacturing capabilities as the ABV percentage is in line with existing Budweiser beers.
+
+In conclusion, we recommend that Budweiser build a new facility in Georgia, the tax rate is forgiving at 6%, and this cost would be countered by the increased profits gained through smaller beverage containers as well as reduced shipping costs.
