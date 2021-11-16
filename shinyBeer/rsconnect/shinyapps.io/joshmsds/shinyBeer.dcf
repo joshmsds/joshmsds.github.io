@@ -1,0 +1,13 @@
+name: shinyBeer
+title: shinyBeer
+username:
+account: joshmsds
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5138822
+bundleId: 5260032
+url: https://joshmsds.shinyapps.io/shinyBeer/
+when: 1637103817.51907
+lastSyncTime: 1637103817.51907
+asMultiple: FALSE
+asStatic: FALSE
