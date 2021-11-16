@@ -1,10 +1,7 @@
 ---
-title: "index"
+title: "My Website"
 output: html_document
 ---
 
-# simple site
-blah 
-
-## test test
-beep boop
+# Welcome
+Hello and welcome to my io site. Please check out the site. 
