@@ -27,6 +27,7 @@ server <- function(input, output){
              xlab = "IBU Values",
              main = "histogram of IBU values")
       })
+  
   output$ibuBPlot <- renderPlot({
         x <- ibuOmit$IBU
         bins <- seq(min(x), max(x), length.out = input$bins+1)
